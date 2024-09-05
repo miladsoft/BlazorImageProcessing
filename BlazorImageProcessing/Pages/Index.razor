@@ -1,0 +1,55 @@
+﻿@page "/"
+@using BlazorImageProcessing.Services
+@inject NavigationManager Navigation
+@inject IJSRuntime JsRuntime
+@inject ImageProcessingService imageProcessingService
+
+<h3>Image Processing with Emgu CV</h3>
+
+<InputFile OnChange="HandleSelected" />
+<br />
+<img src="@imageSrc" alt="Uploaded Image" style="max-width: 500px; max-height: 500px;" />
+
+<button @onclick="ProcessImage">Process Image</button>
+
+@if (processedImage != null)
+{
+    <h4>Processed Image:</h4>
+    <img src="@processedImage" style="max-width: 500px; max-height: 500px;" />
+}
+
+@code {
+    private string imageSrc;
+    private string processedImage;
+    private byte[] imageData;
+
+    private async Task HandleSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream().ReadAsync(buffer);
+            imageData = buffer;
+
+            imageSrc = $"data:image/png;base64,{Convert.ToBase64String(imageData)}";
+        }
+        else
+        {
+            Console.WriteLine("No file selected.");
+        }
+    }
+
+    private async Task ProcessImage()
+    {
+        if (imageData != null)
+        {
+            byte[] processedData = imageProcessingService.ProcessImage(imageData);
+            processedImage = $"data:image/png;base64,{Convert.ToBase64String(processedData)}";
+        }
+        else
+        {
+            Console.WriteLine("No image data found.");
+        }
+    }
+}
